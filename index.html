@@ -1,0 +1,66 @@
+<html>
+   <head>
+      <title>DC composite chart Sample</title>
+      <!--<link rel = "stylesheet" type = "text/css" href = "static/css/bootstrap.min.css">-->
+      <link rel = "stylesheet" type = "text/css" href = "static/css/dc.min.css"/>
+
+      <script src = "static/js/d3.min.js"></script>
+      <script src = "static/js/crossfilter.min.js"></script>
+      <script src = "static/js/dc.min.js"></script>
+   </head>
+    
+   <body>
+      <div>
+         <div id = "composite"></div>
+      </div>
+
+      <script type = "text/javascript">
+      
+//Data example
+// country,city,month,attractions,hostelNight,drinks,meals,transport,minTemp,maxTemp,precipitation,currency,currencyCode,arrivals,visitorsCity
+// Austria,Vienna,January,15.36,19.92,11.52,22.39,4.83,-3.7,2.5,35,Euro,EUR,29460000,16.3
+// Belgium,Brussels,January,10.97,26.34,13.17,23.7,4.61,-0.5,4.8,68,Euro,EUR,8385000,6.4
+// Czech Republic,Prague,January,13.01,11.49,4.55,16.13,2.08,-3.8,1.8,21,Czech Krona,CZK,10160000,18.1
+// France,Paris,January,13.17,27.89,13.17,22.39,3.95,0.7,6,54,Euro,EUR,86861000,35.2
+
+         d3.csv("data/data3.csv", function(errors, data) {
+            var ndx = crossfilter(data);
+
+            var dim  = ndx.dimension(dc.pluck('city')),
+        
+        //   it works with precipitation and linear scale but not with city and ordinal scale
+        //   var dim  = ndx.dimension(dc.pluck('precipitation')),
+
+
+            grp1 = dim.group().reduceSum(dc.pluck('maxTemp')),
+            grp2 = dim.group().reduceSum(dc.pluck('minTemp'));
+
+         var composite = dc.compositeChart("#composite");
+             composite
+                .width(768)
+               .height(480)
+              .x(d3.scale.ordinal())
+              .xUnits(dc.units.ordinal)
+            // .x(d3.scale.linear().domain([20,80]))
+               .yAxisLabel("Temperature")
+               .xAxisLabel("City")
+               .legend(dc.legend().x(80).y(20).itemHeight(13).gap(5))
+               .renderHorizontalGridLines(true)
+               .compose ([
+                  dc.lineChart(composite)
+                  .dimension(dim)
+                  .colors('red')
+                  .group(grp1, "maximun temperature")
+                  .dashStyle([2,2]),
+                  dc.lineChart(composite)
+                     .dimension(dim)
+                     .colors('blue')
+                     .group(grp2, "minimun temperature")
+                     .dashStyle([5,5])
+               ])
+               .brushOn(false)
+               .render();
+         });
+      </script>
+   </body>
+</html>
